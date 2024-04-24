@@ -40,18 +40,21 @@ const getContact = async (req, res) => {
 // Post contacts
 const createContact = async (req, res) => {
   try {
-    const { Name, PhoneNumber, Email } = req.body;
+    const { name, phone_number, email } = req.body;
+    // console.log(req.userSession);
+    const userSession = req.userSession;
+    const user_id = userSession.userId;
 
     // Execute the INSERT query to add the new employee data to the database
     const [result] = await pool.query(
-      "INSERT INTO contacts (Name, PhoneNumber, Email) VALUES (?, ?, ?)",
-      [Name, PhoneNumber, Email]
+      "INSERT INTO contacts (name, phone_number, email, user_id) VALUES (?, ?, ?, ?)",
+      [name, phone_number, email, user_id]
     );
 
     // Check if the INSERT operation was successful
     if (result.affectedRows === 1) {
       // Return the newly created employee data
-      res.status(201).json({ id: result.insertId, Name, PhoneNumber, Email });
+      res.status(201).json({ id: result.insertId, name, phone_number, email });
     } else {
       // If the INSERT operation failed, return an error message
       res.status(400).json({ error: "Failed to create employee" });
@@ -65,24 +68,27 @@ const createContact = async (req, res) => {
 // UPDATE/EDIT Record
 const editContact = async (req, res) => {
   try {
-    const id = req.params.id;
-    const { Name, PhoneNumber, Email } = req.body;
-    console.log(Name, PhoneNumber, Email);
+    const { name, phone_number, email } = req.body; // Changed variable names to match the request body
+    const {id} = req.params;
+    console.log(name, phone_number, email);
 
-    console.log(id);
-    // Execute the UPDATE query to modify the existing employee data in the database
+    const userSession = req.userSession;
+    const user_id = userSession.userId;
+
+    // Execute the UPDATE query to modify the existing contact data in the database
     const result = await pool.query(
-      "UPDATE contacts SET Name = ?, PhoneNumber = ?, Email = ? WHERE id = ?",
-      [Name, PhoneNumber, Email, id]
+      "UPDATE contacts SET name = ?, phone_number = ?, email = ? WHERE user_id = ? and id = ?",
+      [name, phone_number, email, user_id, id] // Changed variable names to match the query parameters
     );
-    console.log(result[0]);
+    console.log(result);
+
     // Check if the UPDATE operation was successful
     if (result[0].affectedRows === 1) {
-      // Return the updated employee data
-      res.status(200).json({ contact_id: id, Name, PhoneNumber, Email });
+      // Return the updated contact data
+      res.status(200).json({ user_id, name, phone_number, email }); // Changed variable names to match the response JSON
     } else {
       // If the UPDATE operation failed, return an error message
-      res.status(400).json({ error: "Failed to update employee" });
+      res.status(400).json({ error: "Failed to update contact" });
     }
   } catch (err) {
     // If an error occurs, return the error message
@@ -93,19 +99,22 @@ const editContact = async (req, res) => {
 // DELETE Record
 const deleteContact = async (req, res) => {
   try {
-    const contact_id = req.params.id; // Assuming the parameter name is 'emp_id'
+    const {id} = req.params; // Assuming the parameter name is 'id'
+    const userSession = req.userSession;
+    const user_id = userSession.userId;
 
-    // Execute the DELETE query to remove the employee from the database
-    const [result] = await pool.query("DELETE FROM contacts WHERE id = ?", [
-      contact_id,
-    ]);
+    // Execute the DELETE query to remove the contact from the database
+    const [result] = await pool.query(
+      "DELETE FROM contacts WHERE user_id = ? and id = ?",
+      [user_id, id]
+    );
 
     // Check if the DELETE operation was successful
     if (result.affectedRows === 1) {
-      res.status(200).json({ message: "Employee deleted successfully" });
+      res.status(200).json({ message: "Contact deleted successfully" });
     } else {
-      // If the DELETE operation failed (e.g., employee not found), return an error message
-      res.status(404).json({ error: "Employee not found or already deleted" });
+      // If the DELETE operation failed (e.g., contact not found), return an error message
+      res.status(404).json({ error: "Contact not found or already deleted" });
     }
   } catch (err) {
     // If an error occurs (e.g., database error), return the error message

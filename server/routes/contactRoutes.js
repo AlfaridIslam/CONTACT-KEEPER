@@ -1,34 +1,38 @@
-const express =  require("express");
+const express = require("express");
+const authUser = require("../middleware/userMiddleware");
 
 const router = express.Router();
 
 // Require Controllers
 const {
-    getContacts,
-    getContact,
-    createContact,
-    editContact,
-    deleteContact,
+  getContacts,
+  getContact,
+  createContact,
+  editContact,
+  deleteContact,
 } = require("../controllers/contactControllers");
+
+// for secure routing
+router.use(authUser);
 
 // get entire data
 
-router.get("/", getContacts);
+router.get("/", authUser, getContacts);
 
 // get single data
 
-router.get("/:id", getContact);
+router.get("/:id", authUser, getContact);
 
 // create record
 
-router.post("/", createContact);
+router.post("/", authUser, createContact);
 
 // UPDATE record
 
-router.patch("/:id", editContact);
+router.patch("/:id", authUser, editContact);
 
 // DELETE record
 
-router.delete("/:id", deleteContact);
+router.delete("/:id", authUser, deleteContact);
 
 module.exports = router;
